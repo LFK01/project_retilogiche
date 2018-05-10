@@ -31,13 +31,15 @@ begin
 o_address <= my_address;
 o_we <= '1' when state = "1000" or state = "1001" 
     else '0';
+o_done <= '1' when state = "1001"
+    else '0';
 process(i_clk, i_rst)
 begin
 o_en <= '1';
-if i_rst = '1' then
-     state <= "0000";
-elsif i_clk'event and i_clk = '1' then                 --rising_edge(i_clk)
-    if state = "0000" and i_start = '1' then
+if rising_edge(i_clk) then
+    if i_rst = '1' then
+        state <= "0000";
+   elsif state = "0000" and i_start = '1' then
         state <= "0001";
         my_address <= my_address + "0000000000000010";      --richiesta indirizzo di memoria numero 2
     elsif state = "0001" then
@@ -71,10 +73,10 @@ elsif i_clk'event and i_clk = '1' then                 --rising_edge(i_clk)
                 max_r <= count_r;
             end if;
         end if;
-        if count_c > col-1 then
+        if count_c > col-"00000001" then
             count_c <= "00000001";
             count_r <= count_r + "00000001";
-            if count_r > rig-1 then
+            if count_r > rig-"00000001" then
                 state <= "1010";
             else my_address <= my_address + "0000000000000001";
             end if;
@@ -84,8 +86,8 @@ elsif i_clk'event and i_clk = '1' then                 --rising_edge(i_clk)
             count_c <= count_c + "00000001";
         end if;
     elsif state = "1010" then
-        latoA <= max_c-min_c+1;
-        latoB <= max_r-min_r+1;
+        latoA <= max_c-min_c+"00000001";
+        latoB <= max_r-min_r+"00000001";
         state <= "0110";
     elsif state = "0110" then
         risultato <= latoA*latoB;
@@ -102,12 +104,8 @@ elsif i_clk'event and i_clk = '1' then                 --rising_edge(i_clk)
         o_data <=  risultato(7 downto 0);
         state <= "1001";
     elsif state = "1001" then
-        o_done <= '1';
         state <= "1111";
-    elsif state = "1111" then
-        o_done <= '0';
     end if;
-end if;    
- 
+end if;        
 end process;
 end Behavioral;
